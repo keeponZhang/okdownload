@@ -54,9 +54,11 @@ public class DownloadDispatcher {
 
     // for sort performance(not need to copy one array), using ArrayList instead of deque(for add
     // on top, remove on bottom).
+    //等待的异步任务列表
     private final List<DownloadCall> readyAsyncCalls;
-
+    //运行中的异步任务列表
     private final List<DownloadCall> runningAsyncCalls;
+    //运行中的同步任务列表
     private final List<DownloadCall> runningSyncCalls;
 
     // for enqueueing task during task is finishing
@@ -107,7 +109,7 @@ public class DownloadDispatcher {
         enqueueLocked(tasks);
         skipProceedCallCount.decrementAndGet();
     }
-
+    //执行单个异步任务
     public void enqueue(DownloadTask task) {
         skipProceedCallCount.incrementAndGet();
         enqueueLocked(task);
@@ -149,17 +151,24 @@ public class DownloadDispatcher {
 
     private synchronized void enqueueLocked(DownloadTask task) {
         Util.d(TAG, "enqueueLocked for single task: " + task);
+        //判断下载任务是否已完成，完成则回调taskEnd
         if (inspectCompleted(task)) return;
+        //判断任务是否已经在下载队列中
         if (inspectForConflict(task)) return;
 
         final int originReadyAsyncCallSize = readyAsyncCalls.size();
         enqueueIgnorePriority(task);
+        //如果异步等待列表的数量发生了改变，根据任务优先级重新排序
         if (originReadyAsyncCallSize != readyAsyncCalls.size()) Collections.sort(readyAsyncCalls);
     }
 
     private synchronized void enqueueIgnorePriority(DownloadTask task) {
+        // 每一个task对应一个DownloadCall，执行下载请求
         final DownloadCall call = DownloadCall.create(task, true, store);
+        //运行中的异步任务数量小于最大可并行任务数量（默认为5）
+        //则添加到runningAsyncCalls，线程池调度，在子线程中执行此任务
         if (runningAsyncSize() < maxParallelRunningCount) {
+
             runningAsyncCalls.add(call);
             getExecutorService().execute(call);
         } else {

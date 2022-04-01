@@ -174,7 +174,7 @@ public class ConnectTrial {
     public boolean isEtagOverdue() {
         return info.getEtag() != null && !info.getEtag().equals(responseEtag);
     }
-
+    // 如果返回文件的一部分，则使用HTTP 206状态码；如果返回整个文件，则使用HTTP 200响应码。
     private static boolean isAcceptRange(@NonNull DownloadConnection.Connected connected)
             throws IOException {
         if (connected.getResponseCode() == HttpURLConnection.HTTP_PARTIAL) return true;

@@ -37,6 +37,10 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+        debug{
+            // adb forward tcp:9999 tcp:9999  http://localhost:9999 在线查看数据库
+            resValue("string", "PORT_NUMBER", "9999")
+        }
     }
 }
 
@@ -74,6 +78,8 @@ dependencies {
     implementation project(':kotlin')
 
     compileOnly dep.findbugsAnnotations
+//    在线查看数据库
+    debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
 }
 
 kotlin {

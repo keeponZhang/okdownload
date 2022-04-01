@@ -87,6 +87,7 @@ class SingleActivity : BaseSampleActivity() {
             .setMinIntervalMillisCallbackProcess(16)
             // ignore the same task has already completed in the past.
             .setPassIfAlreadyCompleted(false)
+            .setConnectionCount(1)
             .build()
     }
 

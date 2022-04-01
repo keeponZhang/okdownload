@@ -36,13 +36,19 @@ import com.liulishuo.okdownload.core.file.ProcessFileStrategy;
 public class OkDownload {
 
     @SuppressLint("StaticFieldLeak") static volatile OkDownload singleton;
-
+    //负责同步、异步、多任务的调度，执行、取消
     private final DownloadDispatcher downloadDispatcher;
+    //下载回调（DownloadListener）
     private final CallbackDispatcher callbackDispatcher;
+    //断点存储（内存存储，也支持本地化存储（需要引入okdownload:sqlite））
     private final BreakpointStore breakpointStore;
+    //连接（httpUrlConnection，也支持okhttp3(需要引入okhttp3、okdownload:okhttp)）
     private final DownloadConnection.Factory connectionFactory;
+    //输出流写文件
     private final DownloadOutputStream.Factory outputStreamFactory;
+
     private final ProcessFileStrategy processFileStrategy;
+
     private final DownloadStrategy downloadStrategy;
 
     private final Context context;

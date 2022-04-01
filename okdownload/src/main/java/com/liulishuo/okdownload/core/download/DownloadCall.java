@@ -149,6 +149,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         final ProcessFileStrategy fileStrategy = okDownload.processFileStrategy();
 
         // inspect task start
+        // 重置store中的taskId，回调taskStart()
         inspectTaskStart();
         do {
             // 0. check basic param before start
@@ -183,6 +184,10 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             @NonNull final DownloadCache cache = createCache(info);
             this.cache = cache;
 
+            // 0. check basic param before start，检查url和是否已被取消
+            // 1. create basic info if not exist，通过store创建或者取出断点信息(taskId，自增创建的)
+            // 2. remote check.校验文件大小，是否支持断点续传，是否需要重定向，设置blockInfo
+            // 原文链接：https://blog.csdn.net/ZHENZHEN9310/article/details/103316496
             // 2. remote check.
             // 4.访问下载链接判断断点信息是否合理；
             final BreakpointRemoteCheck remoteCheck = createRemoteCheck(info);

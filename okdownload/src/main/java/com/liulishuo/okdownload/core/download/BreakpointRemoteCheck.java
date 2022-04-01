@@ -110,6 +110,7 @@ public class BreakpointRemoteCheck {
 
         // 1. assemble basic data.
         downloadStrategy.validFilenameFromResponse(responseFilename, task, info);
+        //info是数据库保存的断点信息
         info.setChunked(isChunked);
         info.setEtag(responseEtag);
 
@@ -121,7 +122,7 @@ public class BreakpointRemoteCheck {
         final ResumeFailedCause resumeFailedCause = downloadStrategy
                 .getPreconditionFailedCause(responseCode, info.getTotalOffset() != 0, info,
                         responseEtag);
-
+        //断点信息是否可以恢复
         this.resumable = resumeFailedCause == null;
         this.failedCause = resumeFailedCause;
         this.instanceLength = instanceLength;

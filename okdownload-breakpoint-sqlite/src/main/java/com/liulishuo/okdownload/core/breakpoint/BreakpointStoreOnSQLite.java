@@ -38,7 +38,10 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
     }
 
     public BreakpointStoreOnSQLite(Context context) {
+        // /BreakpointSQLiteHelper extends SQLiteOpenHelper，对应本地存储
+        //创建数据库，创建table，对应breakpoint、block、taskFileDirty
         this.helper = new BreakpointSQLiteHelper(context.getApplicationContext());
+        //对应内存缓存处理
         this.onCache = new BreakpointStoreOnCache(helper.loadToCache(),
                 helper.loadDirtyFileList(),
                 helper.loadResponseFilenameToMap());
@@ -138,6 +141,7 @@ public class BreakpointStoreOnSQLite implements DownloadStore {
         helper.close();
     }
 
+    //持有BreakpointStoreOnSQLite的引用
     @NonNull public DownloadStore createRemitSelf() {
         return new RemitStoreOnSQLite(this);
     }
