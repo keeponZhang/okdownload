@@ -55,6 +55,7 @@ public class BreakpointInterceptor implements Interceptor.Connect, Interceptor.F
         if (info.getBlockCount() == 1 && !info.isChunked()) {
             // only one block to download this resource
             // use this block response header instead of trial result if they are different.
+            // 当只有一个线程进行下载文件时，如果断点信息中保存的文件长度和服务端返回的文件长度不一致，则以服务端返回的为准重新进行下载
             final long blockInstanceLength = getExactContentLengthRangeFrom0(connected);
             final long infoInstanceLength = info.getTotalLength();
             if (blockInstanceLength > 0 && blockInstanceLength != infoInstanceLength) {

@@ -78,7 +78,8 @@ class SingleActivity : BaseSampleActivity() {
 
     private fun initTask() {
         val filename = "single-test"
-        val url = "https://cdn.llscdn.com/yy/files/xs8qmxn8-lls-LLS-5.8-800-20171207-111607.apk"
+//        val url = "http://112.90.43.219/imtt.dd.qq.com/sjy.20003/16891/apk/CB4AA8A9F8A2E1112183A81B65AA5EBD.apk?mkey=62465e143af8c367&f=0ae6&fsname=com.wandoujia.phoenix2_8.0.2_22002.apk&csr=db5e&cip=58.248.229.146&proto=http"
+        val url = "http://oss-hqwx-video.hqwx.com/e35e44647cb77818254557313d8857dacab3bb13mp41280.edu5"
         val parentFile = DemoUtil.getParentFile(this)
         task = DownloadTask.Builder(url, parentFile)
             .setFilename(filename)

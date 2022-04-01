@@ -30,7 +30,7 @@ public class CallServerInterceptor implements Interceptor.Connect {
     public DownloadConnection.Connected interceptConnect(DownloadChain chain) throws IOException {
         OkDownload.with().downloadStrategy().inspectNetworkOnWifi(chain.getTask());
         OkDownload.with().downloadStrategy().inspectNetworkAvailable();
-
+ // 进行网络请求，获得响应
         return chain.getConnectionOrCreate().execute();
     }
 }

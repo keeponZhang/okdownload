@@ -50,6 +50,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
         final DownloadTask task = chain.getTask();
 
         // add user customize header
+        // 添加User-Agent字段
         final Map<String, List<String>> userHeader = task.getHeaderMapFields();
         if (userHeader != null) Util.addUserRequestHeaderField(userHeader, connection);
         if (userHeader == null || !userHeader.containsKey(USER_AGENT)) {
@@ -57,6 +58,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
         }
 
         // add range header
+        //添加Range字段
         final int blockIndex = chain.getBlockIndex();
         final BlockInfo blockInfo = info.getBlock(blockIndex);
         if (blockInfo == null) {
@@ -72,6 +74,7 @@ public class HeaderInterceptor implements Interceptor.Connect {
                 + blockInfo.getCurrentOffset() + ")");
 
         // add etag if exist
+        // 如果有Etag信息，则添加If-Match字段
         final String etag = info.getEtag();
         if (!Util.isEmpty(etag)) {
             connection.addHeader(IF_MATCH, etag);
@@ -97,11 +100,12 @@ public class HeaderInterceptor implements Interceptor.Connect {
                 connected.getResponseCode(), responseHeaderFields);
 
         // if precondition failed.
+        // 检查Etag字段是否一致
         final DownloadStrategy strategy = OkDownload.with().downloadStrategy();
         final DownloadStrategy.ResumeAvailableResponseCheck responseCheck =
                 strategy.resumeAvailableResponseCheck(connected, blockIndex, info);
         responseCheck.inspect();
-
+//获取Content-Length、Content-Range字段信息
         final long contentLength;
         final String contentLengthField = connected.getResponseHeaderField(CONTENT_LENGTH);
         if (contentLengthField == null || contentLengthField.length() == 0) {

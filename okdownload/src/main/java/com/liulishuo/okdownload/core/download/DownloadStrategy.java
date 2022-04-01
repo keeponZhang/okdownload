@@ -67,7 +67,7 @@ public class DownloadStrategy {
             BreakpointInfo info) {
         return new ResumeAvailableResponseCheck(connected, blockIndex, info);
     }
-
+    // 文件大小在0-1MB、1-5MB、5-50MB、50-100MB、100MB以上时分别开启1、2、3、4、5个线程进行下载。
     public int determineBlockCount(@NonNull DownloadTask task, long totalLength) {
         if (task.getSetConnectionCount() != null) return task.getSetConnectionCount();
 

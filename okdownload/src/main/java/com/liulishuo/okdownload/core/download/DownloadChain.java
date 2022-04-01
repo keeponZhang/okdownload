@@ -165,10 +165,14 @@ public class DownloadChain implements Runnable {
         callbackDispatcher.dispatch().fetchProgress(task, blockIndex, noCallbackIncreaseBytes);
         noCallbackIncreaseBytes = 0;
     }
+    // 可以看到它主要使用责任链模式进行了两个链式调用：处理请求拦截链和获取数据拦截链。
+    // 处理请求拦截链包含了RetryInterceptor重试拦截器、BreakpointInterceptor断点拦截器、RedirectInterceptor重定向拦截器、
+    // HeaderInterceptor头部信息处理拦截器、CallServerInterceptor请求拦截器，该链式调用过程会逐个调用拦截器的interceptConnect方法
 
     void start() throws IOException {
         final CallbackDispatcher dispatcher = OkDownload.with().callbackDispatcher();
         // connect chain
+        // 处理请求拦截链
         final RetryInterceptor retryInterceptor = new RetryInterceptor();
         final BreakpointInterceptor breakpointInterceptor = new BreakpointInterceptor();
         connectInterceptorList.add(retryInterceptor);
@@ -184,6 +188,7 @@ public class DownloadChain implements Runnable {
 
         dispatcher.dispatch().fetchStart(task, blockIndex, getResponseContentLength());
         // fetch chain
+        // 获取数据拦截链
         final FetchDataInterceptor fetchDataInterceptor =
                 new FetchDataInterceptor(blockIndex, connected.getInputStream(),
                         getOutputStream(), task);

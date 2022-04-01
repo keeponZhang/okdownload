@@ -130,6 +130,12 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     public boolean isCanceled() { return canceled; }
 
     public boolean isFinishing() { return finishing; }
+            // 1.判断当前任务的下载链接长度是否大于0，否则就抛出异常；2.从缓存中获取任务的断点信息，若没有断点信息，则创建断点信息并保存至数据库；
+            // 3.创建带缓存的下载输出流；4.访问下载链接判断断点信息是否合理；5.确定文件路径后等待文件锁释放；
+            // 6. 判断缓存中是否有相同的任务，若有则复用缓存中的任务的分块信息；
+            // 7.检查断点信息是否是可恢复的，若不可恢复，则根据文件大小进行分块，重新下载，否则继续进行下一步；
+            // 8.判断断点信息是否是脏数据（文件存在且断点信息正确且下载链接支持断点续传）；
+            // 9.若是脏数据则根据文件大小进行分块，重新开始下载，否则从断点位置开始下载；10.开始下载。
 
     @Override
     public void execute() throws InterruptedException {
@@ -146,6 +152,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         inspectTaskStart();
         do {
             // 0. check basic param before start
+            //1.判断当前任务的下载链接长度是否大于0，否则就抛出异常；
             if (task.getUrl().length() <= 0) {
                 this.cache = new DownloadCache.PreError(
                         new IOException("unexpected url: " + task.getUrl()));
@@ -157,6 +164,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             // 1. create basic info if not exist
             @NonNull final BreakpointInfo info;
             try {
+                //2.从缓存中获取任务的断点信息，若没有断点信息，则创建断点信息并保存至数据库
                 BreakpointInfo infoOnStore = store.get(task.getId());
                 if (infoOnStore == null) {
                     info = store.createAndInsert(task);
@@ -171,10 +179,12 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             if (canceled) break;
 
             // ready cache.
+            // 3.创建带缓存的下载输出流；
             @NonNull final DownloadCache cache = createCache(info);
             this.cache = cache;
 
             // 2. remote check.
+            // 4.访问下载链接判断断点信息是否合理；
             final BreakpointRemoteCheck remoteCheck = createRemoteCheck(info);
             try {
                 remoteCheck.check();
@@ -185,18 +195,23 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             cache.setRedirectLocation(task.getRedirectLocation());
 
             // 3. waiting for file lock release after file path is confirmed.
+            //5.确定文件路径后等待文件锁释放；
             fileStrategy.getFileLock().waitForRelease(task.getFile().getAbsolutePath());
 
             // 4. reuse another info if another info is idle and available for reuse.
+            // 6. 判断缓存中是否有相同的任务，若有则复用缓存中的任务的分块信息；
             OkDownload.with().downloadStrategy()
                     .inspectAnotherSameInfo(task, info, remoteCheck.getInstanceLength());
 
             try {
+                //7.检查断点信息是否是可恢复的，若不可恢复，则根据文件大小进行分块，重新下载，否则继续进行下一步；
                 if (remoteCheck.isResumable()) {
                     // 5. local check
+                    // 8.判断断点信息是否是脏数据（文件存在且断点信息正确且下载链接支持断点续传）；
                     final BreakpointLocalCheck localCheck = createLocalCheck(info,
                             remoteCheck.getInstanceLength());
                     localCheck.check();
+                    // 9.若是脏数据则根据文件大小进行分块，重新开始下载，否则从断点位置开始下载；
                     if (localCheck.isDirty()) {
                         Util.d(TAG, "breakpoint invalid: download from beginning because of "
                                 + "local check is dirty " + task.getId() + " " + localCheck);
@@ -222,11 +237,13 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
             }
 
             // 7. start with cache and info.
+            // 10. 开始下载
             start(cache, info);
 
             if (canceled) break;
 
             // 8. retry if precondition failed.
+            // 11. 错误重试机制
             if (cache.isPreconditionFailed()
                     && retryCount++ < MAX_COUNT_RETRY_FOR_PRECONDITION_FAILED) {
                 store.remove(task.getId());
@@ -299,7 +316,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
     int getPriority() {
         return task.getPriority();
     }
-
+    // 可以看到它是分块下载的，每一个分块都是一个DownloadChain实例，DownloadChain实现了Runnable接口，继续看startBlocks方法:
     void start(final DownloadCache cache, BreakpointInfo info) throws InterruptedException {
         final int blockCount = info.getBlockCount();
         final List<DownloadChain> blockChainList = new ArrayList<>(info.getBlockCount());
@@ -334,7 +351,7 @@ public class DownloadCall extends NamedRunnable implements Comparable<DownloadCa
         OkDownload.with().downloadDispatcher().finish(this);
         Util.d(TAG, "call is finished " + task.getId());
     }
-
+    // 对于每一个分块任务，都调用了submitChain方法，由一个线程池去处理每一个DownloadChain分块，核心代码就在这里:
     void startBlocks(List<DownloadChain> tasks) throws InterruptedException {
         ArrayList<Future> futures = new ArrayList<>(tasks.size());
         try {

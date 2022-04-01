@@ -37,6 +37,7 @@ public class RetryInterceptor implements Interceptor.Connect, Interceptor.Fetch 
                 if (cache.isInterrupt()) {
                     throw InterruptException.SIGNAL;
                 }
+                //要通过调用processConnect触发下一个Interceptor
                 return chain.processConnect();
             } catch (IOException e) {
                 if (e instanceof RetryException) {

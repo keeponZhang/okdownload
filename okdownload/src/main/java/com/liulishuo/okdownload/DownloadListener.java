@@ -35,6 +35,7 @@ import java.util.Map;
  * @see com.liulishuo.okdownload.core.listener.DownloadListener4WithSpeed
  */
 public interface DownloadListener {
+    //DownloadCall#execute 任务开始
     void taskStart(@NonNull DownloadTask task);
 
     /**
@@ -66,28 +67,28 @@ public interface DownloadListener {
     void connectTrialEnd(@NonNull DownloadTask task,
                          int responseCode,
                          @NonNull Map<String, List<String>> responseHeaderFields);
-
+    //DownloadCall#execute 从头开始
     void downloadFromBeginning(@NonNull DownloadTask task, @NonNull BreakpointInfo info,
                                @NonNull ResumeFailedCause cause);
-
+    //DownloadCall#execute 从断点开始
     void downloadFromBreakpoint(@NonNull DownloadTask task, @NonNull BreakpointInfo info);
-
+    //HeaderInterceptor#interceptConnect 创建链接开始
     void connectStart(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                       @NonNull Map<String, List<String>> requestHeaderFields);
-
+    //HeaderInterceptor#interceptConnect 创建链接结束
     void connectEnd(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                     int responseCode,
                     @NonNull Map<String, List<String>> responseHeaderFields);
-
+    //DownloadChain#start 开始下载
     void fetchStart(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                     @IntRange(from = 0) long contentLength);
-
+    //FetchDataInterceptor#interceptFetch->DownloadChain#flushNoCallbackIncreaseBytes 下载进度
     void fetchProgress(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                        @IntRange(from = 0) long increaseBytes);
-
+    //DownloadChain#start 下载结束
     void fetchEnd(@NonNull DownloadTask task, @IntRange(from = 0) int blockIndex,
                   @IntRange(from = 0) long contentLength);
-
+    //DownloadCall#execute 任务结束
     void taskEnd(@NonNull DownloadTask task, @NonNull EndCause cause,
                  @Nullable Exception realCause);
 }
